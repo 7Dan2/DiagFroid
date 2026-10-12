@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>DiagFroid</title>
+  <style>
+    :root {
+      --primary: #0f4c81;
+      --bp: #2563eb;          /* Bleu BP */
+      --bp-light: #dbeafe;
+      --hp: #dc2626;          /* Rouge HP */
+      --hp-light: #fee2e2;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --border: #cbd5e1;
+      --text: #1e293b;
+      --muted: #64748b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 0.9rem 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 { font-size: 1.25rem; font-weight: 600; }
+    header .subtitle { font-size: 0.8rem; opacity: 0.85; }
+
+    #orientation-banner {
+      display: none;
+      background: #fef3c7;
+      color: #92400e;
+      text-align: center;
+      padding: 0.55rem 1rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    #orientation-banner.visible { display: block; }
+
+    .tabs {
+      display: flex;
+      background: white;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 0.85rem 0.3rem;
+      border: none;
+      background: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--muted);
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: #f0f7ff;
+    }
+
+    .tab-content { display: none; padding: 1rem; max-width: 1000px; margin: 0 auto; }
+    .tab-content.active { display: block; }
+
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 1.2rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      margin-bottom: 1.2rem;
+      border: 1px solid var(--border);
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+
+    /* ===== Schéma compact ===== */
+    .schema-box {
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 0.75rem;
+      margin-bottom: 1.4rem;
+      text-align: center;
+    }
+
+    .schema-svg {
+      width: 100%;
+      max-width: 680px;
+      height: auto;
+    }
+
+    /* ===== Formulaire structuré ===== */
+    .section-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin: 1.4rem 0 0.7rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .section-title.bp { color: var(--bp); border-color: var(--bp); }
+    .section-title.hp { color: var(--hp); border-color: var(--hp); }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.9rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      color: var(--muted);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      background: white;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(15,76,129,0.12);
+    }
+
+    input[type="number"],
+    input[type="text"],
+    select {
+    min-height: 45px;
+    font-size: 1.05rem;
+    }
+
+    .field-bp input {
+    border-left: 5px solid var(--bp);
+    }
+
+    .field-hp input {
+    border-left: 5px solid var(--hp);
+    }
+
+    /* Couleurs BP / HP sur les champs */
+    .field-bp input { border-left: 4px solid var(--bp); }
+    .field-hp input { border-left: 4px solid var(--hp); }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 99px;
+      font-weight: 600;
+      margin-left: 0.3rem;
+    }
+    .badge-bp { background: var(--bp-light); color: var(--bp); }
+    .badge-hp { background: var(--hp-light); color: var(--hp); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.7rem 1.3rem;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 0.95rem;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-outline { background: white; border: 1px solid var(--border); }
+
+    .actions {
+      display: flex;
+      gap: 0.8rem;
+      justify-content: flex-end;
+      margin-top: 1.4rem;
+      flex-wrap: wrap;
+    }
+
+    .placeholder { text-align: center; padding: 2.5rem 1rem; color: var(--muted); }
+
+    .result-box {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.7rem 0.9rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  min-height: 45px;
+  display: flex;
+  align-items: center;
+}
+
+.result-box.ok { background: #ecfdf5; color: #065f46; }
+.result-box.warning { background: #fff7ed; color: #9a3412; }
+.result-box.danger { background: #fef2f2; color: #991b1b; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>DiagFroid</h1>
+    <div class="subtitle">Aide au diagnostic d’installation frigorifique</div>
+  </div>
+  <div style="font-size:0.8rem; opacity:0.9;">Prototype</div>
+</header>
+
+<div id="orientation-banner">
+  Pour une meilleure lisibilité, passez en <strong>mode paysage</strong>
+</div>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="identification">1. Identification</button>
+  <button class="tab-btn" data-tab="mesures">2. Mesures</button>
+  <button class="tab-btn" data-tab="analyse">3. Analyse</button>
+  <button class="tab-btn" data-tab="rapport">4. Rapport</button>
+</nav>
+
+<!-- ONGLET 1 -->
+<section id="identification" class="tab-content active">
+  <div class="card">
+    <h2>Identification de l’installation</h2>
+    <div class="form-grid">
+      <div>
+        <label>Marque</label>
+        <input type="text" id="marque" placeholder="Daikin, Carrier…">
+      </div>
+      <div>
+        <label>Modèle</label>
+        <input type="text" id="modele">
+      </div>
+      <div>
+        <label>Type d’installation</label>
+        <select id="type">
+          <option value="">— Choisir —</option>
+          <option>Chambre froide positive</option>
+          <option>Chambre froide négative</option>
+          <option>Groupe de condensation</option>
+          <option>Split / Multi-split</option>
+          <option>Autre</option>
+        </select>
+      </div>
+      <div>
+        <label>Fluide frigorigène</label>
+        <select id="fluide">
+          <option value="">— Choisir —</option>
+          <option>R134a</option>
+          <option>R410A</option>
+          <option>R32</option>
+          <option>R290</option>
+          <option>R404A</option>
+          <option>R407C</option>
+          <option>R1234yf</option>
+        </select>
+      </div>
+      <div>
+        <label>Technicien</label>
+        <input type="text" id="technicien">
+      </div>
+      <div>
+        <label>Date</label>
+        <input type="date" id="date">
+      </div>
+      <div style="grid-column: 1 / -1;">
+        <label>Observations</label>
+        <textarea id="observations" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-outline" onclick="resetForm()">Réinitialiser</button>
+      <button class="btn btn-primary" onclick="goToTab('mesures')">Continuer → Mesures</button>
+    </div>
+  </div>
+</section>
+
+<!-- ONGLET 2 : MESURES (sans synoptique) -->
+<section id="mesures" class="tab-content">
+  <div class="card">
+    <h2>Mesures sur site</h2>
+
+    <!-- ===== BASSE PRESSION ===== -->
+    <div class="section-title bp">
+      Basse Pression (BP)
+      <span class="badge badge-bp">Bleu</span>
+    </div>
+    <div class="form-grid">
+      <div class="field-bp">
+        <label>Pression aspiration (bar)</label>
+        <input type="number" step="0.1" id="p_aspir" style="min-height:45px;">
+      </div>
+      <div class="field-bp">
+        <label>Température aspiration (°C)</label>
+        <input type="number" step="0.1" id="t_aspir" style="min-height:45px;">
+      </div>
+      <div class="field-bp">
+        <label>T° air entrée évaporateur (°C)</label>
+        <input type="number" step="0.1" id="t_air_evap_in" style="min-height:45px;">
+      </div>
+      <div class="field-bp">
+        <label>T° air sortie évaporateur (°C)</label>
+        <input type="number" step="0.1" id="t_air_evap_out" style="min-height:45px;">
+      </div>
+    </div>
+
+    <!-- ===== HAUTE PRESSION ===== -->
+    <div class="section-title hp">
+      Haute Pression (HP)
+      <span class="badge badge-hp">Rouge</span>
+    </div>
+    <div class="form-grid">
+      <div class="field-hp">
+        <label>Pression refoulement (bar)</label>
+        <input type="number" step="0.1" id="p_refoul" style="min-height:45px;">
+      </div>
+      <div class="field-hp">
+        <label>Température refoulement (°C)</label>
+        <input type="number" step="0.1" id="t_refoul" style="min-height:45px;">
+      </div>
+      <div class="field-hp">
+        <label>Température ligne liquide (°C)</label>
+        <input type="number" step="0.1" id="t_liquide" style="min-height:45px;">
+      </div>
+      <div class="field-hp">
+        <label>T° air entrée condenseur (°C)</label>
+        <input type="number" step="0.1" id="t_air_cond_in" style="min-height:45px;">
+      </div>
+      <div class="field-hp">
+        <label>T° air sortie condenseur (°C)</label>
+        <input type="number" step="0.1" id="t_air_cond_out" style="min-height:45px;">
+      </div>
+    </div>
+
+    <!-- ===== ÉLECTRIQUE ===== -->
+    <div class="section-title">
+      Électrique
+    </div>
+    <div class="form-grid">
+      <div>
+        <label>Intensité moteur (A)</label>
+        <input type="number" step="0.1" id="intensite" style="min-height:45px;">
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-outline" onclick="goToTab('identification')">← Retour</button>
+      <button class="btn btn-primary" onclick="goToTab('analyse')">Voir l’analyse →</button>
+    </div>
+  </div>
+</section>
+
+
+
+
+<!-- ONGLET 3 & 4 (placeholders) -->
+<!-- ONGLET 3 : ANALYSE -->
+<section id="analyse" class="tab-content">
+  <div class="card">
+    <h2>Analyse du cycle</h2>
+
+    <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem;">
+      <button class="btn btn-primary" onclick="lancerAnalyse()">Calculer l’analyse</button>
+      <button class="btn btn-outline" onclick="goToTab('mesures')">← Modifier les mesures</button>
+    </div>
+
+    <!-- Résultats BP -->
+    <div class="section-title bp">Basse Pression (BP)</div>
+    <div class="form-grid" style="margin-bottom:1.5rem;">
+      <div>
+        <label>T° saturation BP</label>
+        <div id="t_sat_bp" class="result-box">—</div>
+      </div>
+      <div>
+        <label>Surchauffe</label>
+        <div id="surchauffe" class="result-box">—</div>
+      </div>
+      <div>
+        <label>ΔT air évaporateur</label>
+        <div id="delta_evap" class="result-box">—</div>
+      </div>
+    </div>
+
+    <!-- Résultats HP -->
+    <div class="section-title hp">Haute Pression (HP)</div>
+    <div class="form-grid" style="margin-bottom:1.5rem;">
+      <div>
+        <label>T° saturation HP</label>
+        <div id="t_sat_hp" class="result-box">—</div>
+      </div>
+      <div>
+        <label>Sous-refroidissement</label>
+        <div id="sous_refroidissement" class="result-box">—</div>
+      </div>
+      <div>
+        <label>ΔT air condenseur</label>
+        <div id="delta_cond" class="result-box">—</div>
+      </div>
+    </div>
+
+    <!-- Autres -->
+    <div class="section-title">Indicateurs</div>
+    <div class="form-grid">
+      <div>
+        <label>Rapport de compression</label>
+        <div id="rapport_compression" class="result-box">—</div>
+      </div>
+      <div>
+        <label>Intensité relevée</label>
+        <div id="intensite_affichee" class="result-box">—</div>
+      </div>
+    </div>
+
+    <!-- Commentaires automatiques -->
+    <div style="margin-top:1.8rem;">
+      <div class="section-title">Commentaires automatiques</div>
+      <div id="commentaires" style="background:#f8fafc; border-radius:8px; padding:1rem; min-height:80px; font-size:0.95rem; line-height:1.5;">
+        Cliquez sur « Calculer l’analyse » pour obtenir les commentaires.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ONGLET 4 : RAPPORT -->
+<section id="rapport" class="tab-content">
+  <div class="card">
+    <h2>Rapport d’intervention</h2>
+
+    <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem;">
+      <button class="btn btn-primary" onclick="genererPDF()">Exporter en PDF A4</button>
+      <button class="btn btn-outline" onclick="goToTab('analyse')">← Retour Analyse</button>
+    </div>
+
+    <!-- Aperçu du rapport (c’est cette zone qui sera capturée) -->
+    <div id="zone-rapport" style="background:white; padding:1.5rem; border:1px solid #e2e8f0; border-radius:10px;">
+      
+      <div style="text-align:center; margin-bottom:1.5rem; border-bottom:2px solid #0f4c81; padding-bottom:1rem;">
+        <h2 style="color:#0f4c81; margin:0;">DiagFroid – Rapport d’intervention</h2>
+        <div style="font-size:0.9rem; color:#64748b;" id="rapport-date"></div>
+      </div>
+
+      <!-- Identification -->
+      <h3 style="color:#0f4c81; font-size:1.05rem; margin:1.2rem 0 0.6rem;">1. Identification</h3>
+      <div id="rapport-identification" style="font-size:0.95rem; line-height:1.6;"></div>
+
+      <!-- Mesures -->
+      <h3 style="color:#0f4c81; font-size:1.05rem; margin:1.4rem 0 0.6rem;">2. Mesures relevées</h3>
+      <div id="rapport-mesures" style="font-size:0.95rem; line-height:1.6;"></div>
+
+      <!-- Analyse -->
+      <h3 style="color:#0f4c81; font-size:1.05rem; margin:1.4rem 0 0.6rem;">3. Analyse</h3>
+      <div id="rapport-analyse" style="font-size:0.95rem; line-height:1.6;"></div>
+
+      <!-- Commentaires -->
+      <h3 style="color:#0f4c81; font-size:1.05rem; margin:1.4rem 0 0.6rem;">4. Commentaires</h3>
+      <div id="rapport-commentaires" style="font-size:0.95rem; line-height:1.6; background:#f8fafc; padding:0.8rem; border-radius:6px;"></div>
+
+      <div style="margin-top:2rem; font-size:0.8rem; color:#94a3b8; text-align:center;">
+        Document généré par DiagFroid – Prototype
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  function goToTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+  }
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => goToTab(btn.dataset.tab));
+  });
+
+  document.getElementById('date').valueAsDate = new Date();
+
+  function resetForm() {
+    if (confirm('Réinitialiser ?')) {
+      document.querySelectorAll('#identification input, #identification select, #identification textarea')
+        .forEach(el => el.value = '');
+      document.getElementById('date').valueAsDate = new Date();
+    }
+  }
+
+  // Orientation
+  function checkOrientation() {
+    const banner = document.getElementById('orientation-banner');
+    const isPortrait = window.matchMedia("(orientation: portrait)").matches;
+    banner.classList.toggle('visible', isPortrait || window.innerWidth < 700);
+  }
+  checkOrientation();
+  window.addEventListener('resize', checkOrientation);
+  window.addEventListener('orientationchange', () => setTimeout(checkOrientation, 150));
+
+  function getSaturationTemp(pressureBar, fluide) {
+  // Formules très simplifiées (approximation)
+  // À remplacer plus tard par CoolProp
+  const P = pressureBar;
+
+  if (!P || P <= 0) return null;
+
+  switch(fluide) {
+    case "R134a":
+      return -42.37 + 19.5 * Math.log(P) + 0.8 * P;        // approx
+    case "R410A":
+      return -51.5 + 22.8 * Math.log(P) + 0.6 * P;
+    case "R32":
+      return -52 + 23.5 * Math.log(P) + 0.55 * P;
+    case "R290":
+      return -42 + 20.5 * Math.log(P) + 0.7 * P;
+    case "R404A":
+      return -46 + 21.2 * Math.log(P) + 0.65 * P;
+    case "R407C":
+      return -43.5 + 20.8 * Math.log(P) + 0.7 * P;
+    case "R1234yf":
+      return -40 + 19.2 * Math.log(P) + 0.75 * P;
+    default:
+      return -40 + 20 * Math.log(P);
+  }
+}
+
+function lancerAnalyse() {
+  const fluide = document.getElementById("fluide").value;
+  const pAspir = parseFloat(document.getElementById("p_aspir").value);
+  const tAspir = parseFloat(document.getElementById("t_aspir").value);
+  const pRefoul = parseFloat(document.getElementById("p_refoul").value);
+  const tRefoul = parseFloat(document.getElementById("t_refoul").value);
+  const tLiquide = parseFloat(document.getElementById("t_liquide").value);
+
+  const tAirEvapIn = parseFloat(document.getElementById("t_air_evap_in").value);
+  const tAirEvapOut = parseFloat(document.getElementById("t_air_evap_out").value);
+  const tAirCondIn = parseFloat(document.getElementById("t_air_cond_in").value);
+  const tAirCondOut = parseFloat(document.getElementById("t_air_cond_out").value);
+  const intensite = parseFloat(document.getElementById("intensite").value);
+
+  // Calculs
+  const tSatBP = getSaturationTemp(pAspir, fluide);
+  const tSatHP = getSaturationTemp(pRefoul, fluide);
+
+  const surchauffe = (tAspir && tSatBP) ? (tAspir - tSatBP).toFixed(1) : null;
+  const sousRef = (tLiquide && tSatHP) ? (tSatHP - tLiquide).toFixed(1) : null;
+  const deltaEvap = (tAirEvapIn && tAirEvapOut) ? (tAirEvapIn - tAirEvapOut).toFixed(1) : null;
+  const deltaCond = (tAirCondOut && tAirCondIn) ? (tAirCondOut - tAirCondIn).toFixed(1) : null;
+  const rapport = (pAspir && pRefoul) ? (pRefoul / pAspir).toFixed(2) : null;
+
+  // Affichage
+  document.getElementById("t_sat_bp").textContent = tSatBP ? tSatBP.toFixed(1) + " °C" : "—";
+  document.getElementById("surchauffe").textContent = surchauffe ? surchauffe + " K" : "—";
+  document.getElementById("delta_evap").textContent = deltaEvap ? deltaEvap + " K" : "—";
+
+  document.getElementById("t_sat_hp").textContent = tSatHP ? tSatHP.toFixed(1) + " °C" : "—";
+  document.getElementById("sous_refroidissement").textContent = sousRef ? sousRef + " K" : "—";
+  document.getElementById("delta_cond").textContent = deltaCond ? deltaCond + " K" : "—";
+
+  document.getElementById("rapport_compression").textContent = rapport ? rapport : "—";
+  document.getElementById("intensite_affichee").textContent = intensite ? intensite + " A" : "—";
+
+  // Commentaires automatiques
+  let commentaires = [];
+
+  if (!fluide) commentaires.push("• Fluide non renseigné → précision des calculs limitée.");
+  if (!pAspir || !tAspir) commentaires.push("• Mesures BP incomplètes (pression ou température aspiration manquante).");
+  if (!pRefoul || !tLiquide) commentaires.push("• Mesures HP incomplètes.");
+
+  if (surchauffe !== null) {
+    if (surchauffe < 4) commentaires.push("• Surchauffe faible (< 4 K) → risque de retour de liquide.");
+    else if (surchauffe > 12) commentaires.push("• Surchauffe élevée (> 12 K) → possible manque de charge ou détendeur déréglé.");
+    else commentaires.push("• Surchauffe dans une plage correcte.");
+  }
+
+  if (sousRef !== null) {
+    if (sousRef < 3) commentaires.push("• Sous-refroidissement faible → possible manque de charge.");
+    else if (sousRef > 15) commentaires.push("• Sous-refroidissement élevé → possible excès de charge ou encrassement.");
+    else commentaires.push("• Sous-refroidissement correct.");
+  }
+
+  document.getElementById("commentaires").innerHTML = commentaires.length > 0 
+    ? commentaires.join("<br>") 
+    : "Aucune anomalie majeure détectée avec les données actuelles.";
+}
+
+function genererApercuRapport() {
+  // Date
+  const date = document.getElementById("date").value || new Date().toLocaleDateString("fr-FR");
+  document.getElementById("rapport-date").textContent = "Date d’intervention : " + date;
+
+  // Identification
+  const ident = `
+    <strong>Marque :</strong> ${document.getElementById("marque").value || "—"}<br>
+    <strong>Modèle :</strong> ${document.getElementById("modele").value || "—"}<br>
+    <strong>Type :</strong> ${document.getElementById("type").value || "—"}<br>
+    <strong>Fluide :</strong> ${document.getElementById("fluide").value || "—"}<br>
+    <strong>Technicien :</strong> ${document.getElementById("technicien").value || "—"}
+  `;
+  document.getElementById("rapport-identification").innerHTML = ident;
+
+  // Mesures
+  const mesures = `
+    <strong style="color:#2563eb;">Basse Pression</strong><br>
+    P aspiration : ${document.getElementById("p_aspir").value || "—"} bar<br>
+    T aspiration : ${document.getElementById("t_aspir").value || "—"} °C<br>
+    T air entrée évap. : ${document.getElementById("t_air_evap_in").value || "—"} °C<br>
+    T air sortie évap. : ${document.getElementById("t_air_evap_out").value || "—"} °C<br><br>
+
+    <strong style="color:#dc2626;">Haute Pression</strong><br>
+    P refoulement : ${document.getElementById("p_refoul").value || "—"} bar<br>
+    T refoulement : ${document.getElementById("t_refoul").value || "—"} °C<br>
+    T liquide : ${document.getElementById("t_liquide").value || "—"} °C<br>
+    T air entrée cond. : ${document.getElementById("t_air_cond_in").value || "—"} °C<br>
+    T air sortie cond. : ${document.getElementById("t_air_cond_out").value || "—"} °C<br><br>
+
+    <strong>Électrique</strong><br>
+    Intensité : ${document.getElementById("intensite").value || "—"} A
+  `;
+  document.getElementById("rapport-mesures").innerHTML = mesures;
+
+  // Analyse (on reprend les valeurs affichées)
+  const analyse = `
+    T° sat. BP : ${document.getElementById("t_sat_bp").textContent}<br>
+    Surchauffe : ${document.getElementById("surchauffe").textContent}<br>
+    ΔT air évap. : ${document.getElementById("delta_evap").textContent}<br><br>
+    T° sat. HP : ${document.getElementById("t_sat_hp").textContent}<br>
+    Sous-refroidissement : ${document.getElementById("sous_refroidissement").textContent}<br>
+    ΔT air cond. : ${document.getElementById("delta_cond").textContent}<br><br>
+    Rapport de compression : ${document.getElementById("rapport_compression").textContent}
+  `;
+  document.getElementById("rapport-analyse").innerHTML = analyse;
+
+  // Commentaires
+  document.getElementById("rapport-commentaires").innerHTML = 
+    document.getElementById("commentaires").innerHTML;
+}
+
+// Génère le PDF A4
+async function genererPDF() {
+  // D’abord on met à jour l’aperçu
+  genererApercuRapport();
+
+  const element = document.getElementById("zone-rapport");
+
+  // Affiche un petit message
+  const btn = event.target;
+  const oldText = btn.textContent;
+  btn.textContent = "Génération en cours…";
+  btn.disabled = true;
+
+  try {
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      logging: false
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const imgWidth = pageWidth - 20; // marges
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = 10;
+
+    pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    // Si le contenu dépasse une page
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight + 10;
+      pdf.addPage();
+      pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    const nomFichier = `DiagFroid_${document.getElementById("modele").value || "rapport"}_${new Date().toISOString().slice(0,10)}.pdf`;
+    pdf.save(nomFichier);
+
+  } catch (err) {
+    alert("Erreur lors de la génération du PDF : " + err.message);
+  }
+
+  btn.textContent = oldText;
+  btn.disabled = false;
+}
+
+// Met à jour l’aperçu dès qu’on arrive sur l’onglet Rapport
+document.querySelector('[data-tab="rapport"]').addEventListener("click", () => {
+  setTimeout(genererApercuRapport, 100);
+});
+
+
+</script>
+
+<!-- Bibliothèques pour l’export PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+</body>
+</html>
